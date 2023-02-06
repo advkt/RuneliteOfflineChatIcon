@@ -88,24 +88,29 @@ public class OfflineChatIconPlugin extends Plugin
 	private void rebuildChat(String rsn, Boolean addIcon){
 		boolean needRefreshing = false;
 		IterableHashTable<MessageNode> messages = client.getMessages();
+		final String standardizedRsnFromEvent = Text.standardize(rsn);
 		for (MessageNode message: messages) {
 			//I really only think i need to run standardized on the message.getName(), but want to make sure
 			String cleanRsnFromMessage = Text.standardize(Text.removeTags(message.getName()));
-			String standardizedRsnFromEvent = Text.standardize(rsn);
 			ChatMessageType messageType = message.getType();
-			if(cleanRsnFromMessage.equals(standardizedRsnFromEvent)){
-				if(messageType == ChatMessageType.CLAN_CHAT || messageType == ChatMessageType.CLAN_GUEST_CHAT) {
-					if(addIcon){
-						message.setName(iconImg + message.getName());
-					}else {
-						message.setName(message.getName().replace(iconImg, ""));
-					}
+			if (cleanRsnFromMessage.equals(standardizedRsnFromEvent)) {
+				if (messageType == ChatMessageType.CLAN_CHAT || messageType == ChatMessageType.CLAN_GUEST_CHAT) {
+					String name = message.getName();
+					boolean hasLogoutIcon = name.contains(iconImg);
 
 					needRefreshing = true;
+					if (addIcon && !hasLogoutIcon) {
+						message.setName(iconImg + name);
+					} else if (hasLogoutIcon) {
+						message.setName(name.replace(iconImg, ""));
+					} else {
+						needRefreshing = false;
+					}
+
 				}
 			}
 		}
-		if(needRefreshing){
+		if (needRefreshing) {
 			client.refreshChat();
 		}
 	}
